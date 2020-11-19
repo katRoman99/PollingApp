@@ -1,0 +1,68 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="container mt-5 w-100">
+    <div class="row justify-content-center">
+        <div class="col">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+<script type="text/javascript">
+    var ctx = document.getElementById('myChart').getContext('2d');
+
+    cleanLabels("{{choices}}")
+
+    var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'horizontalBar',
+
+        // The data for our dataset
+        data: {
+            labels: ["{{choice1}}", "{{choice2}}", "{{choice3}}", "{{choice4}}"],
+            datasets: [{
+                label: "{{question}}",
+                backgroundColor: [
+                    "rgba(75, 192, 192, 0.2)",
+                    "rgba(54, 162, 235, 0.2)",
+                    "rgba(153, 102, 255, 0.2)",
+                    "rgba(201, 203, 207, 0.2)"
+                ],
+                borderColor: 'rgb(255, 99, 132)',
+                data: cleanData("{{votes}}"),
+            }]
+        },
+
+        // Configuration options go here
+        options: {"scales":{"xAxes":[{"ticks":{"beginAtZero":true}}]}}
+    });
+
+    function cleanData(dataIn) {
+        var votes = dataIn
+        votes = votes.replace('[', '')
+        votes = votes.replace(']', '')
+        dataOut = []
+
+        for (var x of votes.split(',')) {
+            dataOut.push(x)
+        }
+
+        return dataOut
+    }
+
+    function cleanLabels(dataIn) {
+        var labels = dataIn
+        labels = labels.replace('[', '')
+        labels = labels.replace(']', '')
+        dataOut = []
+
+        var data = labels.split(",")
+
+        console.log(data)
+    }
+</script>
+
+{% endblock %}

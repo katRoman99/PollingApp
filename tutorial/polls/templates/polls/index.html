@@ -1,0 +1,18 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+{% if question_list %}
+<div class="latest-list">
+    {% for question in question_list %}
+        <div class="custom-counter">
+            <a id="latest" href="{% url 'polls:detail' question.id %}">{{ question.question_text }}
+                <!-- <span class="badge badge-secondary" style="transform: scale(0.75); font-family: Arial;">New</span> -->
+            </a>
+        </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p>No polls are available.</p>
+</div>
+{% endif %}
+{% endblock %}

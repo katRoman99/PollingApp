@@ -1,0 +1,77 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="card text-center">
+    <div class="card-body">
+        <h5 class="card-title">Poll #{{ question.id }}</h5>
+        <p class="card-text" style="font-family: fantasy; font-size: 24px;">{{ question.question_text }}</p>
+    </div>
+</div>
+<div class="d-flex justify-content-center" style="background-color: white;">
+    <div class="d-flex flex-column my-3" id="poll">
+        {% for choice in question.choice_set.all %}
+            <div class="form-check my-2" style="transform: scale(1.5);">
+                <input id="choice{{choice.id}}" type="radio" class="form-check-input" name="poll-group" value="{{choice.id}}" required>
+                <label class="form-check-label" for="choice{{choice.id}}">{{ choice.choice_text }}</label>  
+            </div>
+        {% endfor %}
+        <div id="submit-field" class="d-flex justify-content-center">
+            <button id="poll-submit" type="submit" class="btn btn-outline-dark" style="margin-top: 25px;" onClick="checkSubmission()">Submit</button>
+        </div>
+        <a id="results-btn" href="{% url 'polls:results' question.id %}" class="btn btn-outline-info" style="margin-top: 10px;">Show Results</a>
+    </div>
+</div>
+<div id="submit-error" class="d-none justify-content-center" style="background-color: white;">
+    <div class="alert alert-danger my-2" role="alert" style="transform: scale(0.85);">
+        You need to select your answer!
+    </div>
+</div>
+<div class="card text-center">
+    <div class="card-footer text-muted">
+        <span class="align-middle">Posted: {{ question.pub_date.date }} {{ question.pub_date.time }}</span>
+    </div>
+</div>
+<!-- <a class="btn btn-outline-dark" href="{% url 'polls:index' %}">&#x2190; Back to polls</a> -->
+
+<script type="text/javascript">
+
+    function checkSubmission() {
+        var checkedValue = null; 
+        var inputElements = document.getElementsByName("poll-group")
+
+        for(var i=0; inputElements[i]; ++i){
+            if(inputElements[i].checked){
+                checkedValue = inputElements[i].value;
+            }
+        }
+
+        if (checkedValue == null) {
+            var error = document.getElementById("submit-error")
+            error.classList.remove("d-none")
+            error.classList.add("d-flex")
+        } else {
+            submitPoll(checkedValue)
+        }
+    }
+
+    function submitPoll(checkedValue) {
+
+        url = 'process_choice/'
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken, 
+            },
+            body: JSON.stringify({'choiceId': checkedValue})
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            document.getElementById("submit-field").innerHTML = 
+            "<div class='alert alert-success d-flex justify-content-center mt-3' role='alert'>" +
+            data + "</div>"
+        })
+    }
+</script>
+{% endblock %}

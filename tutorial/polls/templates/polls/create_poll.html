@@ -1,0 +1,232 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div id="intro" class="d-flex justify-content-center my-5">
+    <div class="card border-dark w-45">
+        <div class="card-header text-center">
+            <h5 class="card-title">Welcome to the Poll creator!</h5>
+        </div>
+        <div class="card-body text-center">
+            <p class="card-text creator-start">Type in the question you would like to ask.</p>
+            <p class="card-text creator-start">Add answer choices as you go.</p>
+            <div class="d-flex justify-content-center">
+                <button type="button" class="btn btn-outline-dark" onclick="startCreator()">Got it, let's start my poll!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="question-creator-wrapper" class="d-none justify-content-center mt-4">
+    <div class="card border-dark w-45">
+        <div class="card-header text-center">
+            <h5 class="card-title">Welcome to the Poll creator!</h5>
+        </div>
+        <div class="card-body text-center">
+            <p class="card-text creator-start">Type in the question and poll choices.</p>
+            <p class="card-text creator-start">Click "Submit" to see the preview of your poll.</p>
+            <form id="form">
+                <div class="row justify-content-center">
+                    <div class="col-8 my-2">
+                        <label class="row justify-content-start ml-2" for="question">Poll question</label>
+                        <input type="text" class="form-control" name="question" id="question" onkeypress="return noenter()" placeholder="Poll question...">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 my-3">
+                        <label class="row justify-content-start ml-2" for="choice1">Choice 1</label>
+                        <input type="text" class="form-control" name="choice1" id="choice1" onkeypress="return noenter()" placeholder="Choice 1">
+                    </div>
+                    <div class="col-6 my-3">
+                        <label class="row justify-content-start ml-2" for="choice2">Choice 2</label>
+                        <input type="text" class="form-control" name="choice2" id="choice2" onkeypress="return noenter()" placeholder="Choice 2">
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-6 my-3">
+                        <label class="row justify-content-start ml-2" for="choice3">Choice 3</label>
+                        <input type="text" class="form-control" name="choice3" id="choice3" onkeypress="return noenter()" placeholder="Choice 3">
+                    </div>
+                    <div class="col-6 my-3">
+                        <label class="row justify-content-start ml-2" for="choice4">Choice 4</label>
+                        <input type="text" class="form-control" name="choice4" id="choice4" onkeypress="return noenter()" placeholder="Choice 4">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center my-2">
+                    <input type="button" class="btn btn-dark" value="Preview Poll" onclick="checkPoll()">
+                </div>
+            </form>
+        </div>
+        <div id="submit-error" class="d-none">
+            <div class="alert alert-danger" role="alert" style="transform: scale(0.85);">
+                You need to provide a poll question and 4 answer choices.<br>
+                Question and the answer choices must contain no quotes.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="preview" class="d-none">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title text-center">Poll Preview</h5>
+            <p id="preview_question"></p>
+        </div>
+    </div>
+    <div class="d-flex justify-content-center" style="background-color: white;">
+        <div id="choice_preview"></div>
+    </div>
+    <div class="card text-center">
+        <div class="card-footer text-muted">
+            <span class="align-middle">Posted: 'publication date'</span>
+        </div>
+    </div>
+    <div id="preview_action" class="d-flex flex-row justify-content-center mt-3">
+        <input type="button" class="btn btn-dark mr-2" value="← Go back" onclick="discardPoll()">
+        <input type="button" class="btn btn-info ml-2" value="Publish →" onclick="createPoll(getPollFields())">
+    </div>
+</div>
+
+    <script type="text/javascript">
+
+        function noenter() {
+            return !(window.event && window.event.keyCode == 13); 
+        }
+
+        function startCreator() {
+            var form = document.getElementById("question-creator-wrapper")
+            form.classList.remove("d-none")
+            form.classList.add("d-flex")
+            document.getElementById("intro").classList.remove("d-flex")
+            document.getElementById("intro").classList.add("d-none")
+        }
+
+        function showPreview(poll) {
+            var poll_creator = document.getElementById("question-creator-wrapper")
+            poll_creator.classList.remove("d-flex")
+            poll_creator.classList.add("d-none")
+
+            var preview = document.getElementById("preview")
+            setUpPreview(poll)
+            preview.classList.remove("d-none")
+        }
+
+        function setUpPreview(poll) {
+            var question_preview = document.getElementById("preview_question")
+            question_preview.innerHTML = "<p class='card-text text-center' " + 
+                "style='font-family: fantasy; font-size: 24px;'>" + poll['question'] + "</p>";
+
+            var choice_preview = document.getElementById("choice_preview")
+            var newHtml = "<div id='choice_preview' class='d-flex flex-column justify-content-center my-3' id='poll'>"
+
+            for (const [key, value] of Object.entries(poll['choices'])) {
+                newHtml += "<div class='form-check my-2' style='transform: scale(1.5);'>" +
+                    "<input type='radio' class='form-check-input' name='poll-group'>" +
+                    "<label class='form-check-label'>" + value + "</label></div>"
+            }
+
+            newHtml += "<button id='poll-submit' type='submit' class='btn btn-outline-dark' style='margin-top: 25px;'>" +
+            "Submit</button><button id='results-btn' type='submit' class='btn btn-outline-info' style='margin-top: 10px;'>" +
+            "Show Results</button></div>"
+
+            choice_preview.innerHTML = newHtml
+        }
+
+        function getPollFields() {
+            var form = document.getElementById("form")
+            var question = form.question.value
+            var choice1 = form.choice1.value
+            var choice2 = form.choice2.value
+            var choice3 = form.choice3.value
+            var choice4 = form.choice4.value
+
+            if (question !== "" && choice1 !== "" && choice2 !== "" && choice3 !== "" && choice4 !== "" ) {
+                if (
+                    !question.includes("'") && !question.includes('"') && 
+                    !choice1.includes("'") && !choice1.includes('"') &&
+                    !choice2.includes("'") && !choice2.includes('"') &&
+                    !choice3.includes("'") && !choice3.includes('"') &&
+                    !choice4.includes("'") && !choice4.includes('"')) {
+                        var poll = {
+                        'question': question,
+                        'choices': {
+                            'choice_1': choice1,
+                            'choice_2': choice2,
+                            'choice_3': choice3,
+                            'choice_4': choice4,
+                        }
+                    }
+                }
+                return poll
+            }
+
+
+        }
+
+        function checkPoll() {
+            var poll = getPollFields()
+            if (poll != undefined) {
+                showPreview(poll)
+            } else {
+                var errorField = document.getElementById("submit-error")
+                errorField.classList.remove("d-none")
+                errorField.classList.add("d-flex")
+                errorField.classList.add("justify-content-center")
+            }
+        }
+
+        function checkChoice() {
+            var form = document.getElementById("form-choice")
+            var choice_text = form.choice.value
+
+            console.log(choice_text)
+
+            if (choice_text === "") {
+                var errorField = document.getElementById("submit-error")
+                errorField.classList.remove("d-none")
+                errorField.classList.add("d-flex")
+                errorField.classList.add("justify-content-center")
+            } else {
+                console.log(choice_text)
+            }
+        }
+
+        function createPoll(poll_data) {
+            const url = 'new_poll/'
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({'poll_data': poll_data})
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    document.getElementById("preview_action").innerHTML = 
+                        "<div class='d-flex flex-row justify-content-center mt-3'>" +
+                        "<div class='alert alert-success' role='alert'>" + data + "</div></div>"
+                })
+        }
+
+        function discardPoll() {
+            var poll_creator = document.getElementById("preview")
+            poll_creator.classList.add("d-none")
+
+            var question_creator = document.getElementById("question-creator-wrapper")
+            question_creator.classList.add("d-flex")
+            question_creator.classList.remove("d-none")
+
+            resetCreator()
+        }
+
+        function resetCreator() {
+            var form = document.getElementById("form")
+            form.question.value = ""
+            form.choice1.value = ""
+            form.choice2.value = ""
+            form.choice3.value = ""
+            form.choice4.value = ""
+        }
+    </script>
+{% endblock %}
